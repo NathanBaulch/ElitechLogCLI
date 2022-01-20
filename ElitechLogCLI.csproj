@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net48</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <LangVersion>default</LangVersion>
+        <RootNamespace>ElitechLogCLI</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <PlatformTarget>x86</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>x86</PlatformTarget>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Reference Include="DL, Version=6.2.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>C:\tools\ElitechLogWin\DL.exe</HintPath>
+      </Reference>
+      <Reference Include="NGettext, Version=0.6.1.0, Culture=neutral, PublicKeyToken=08d3d1c89dfd2985">
+        <HintPath>C:\tools\ElitechLogWin\NGettext.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Data.SQLite, Version=1.0.106.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139">
+        <HintPath>C:\tools\ElitechLogWin\System.Data.SQLite.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+        <HintPath>C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Net.Http.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AsciiChart.Sharp" Version="1.0.0" />
+      <PackageReference Include="Chronic.Signed" Version="0.3.2" />
+      <PackageReference Include="CommandLineParser" Version="2.8.0" />
+      <PackageReference Include="CsvHelper" Version="27.2.1" />
+      <PackageReference Include="Dapper" Version="2.0.123" />
+      <PackageReference Include="Humanizer.Core" Version="2.13.14" />
+      <PackageReference Include="Kurukuru" Version="1.4.2" />
+      <PackageReference Include="ShellProgressBar" Version="5.1.0" />
+      <PackageReference Include="System.Text.Json" Version="6.0.1" />
+      <PackageReference Include="YamlDotNet" Version="11.2.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="C:\tools\ElitechLogWin\CH341PT.DLL">
+        <Link>CH341PT.DLL</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="C:\tools\ElitechLogWin\locales\en.mo">
+        <Link>locales\en.mo</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="C:\tools\ElitechLogWin\x86\SQLite.Interop.dll">
+        <Link>x86\SQLite.Interop.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+</Project>
