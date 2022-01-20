@@ -25,8 +25,35 @@ Copyright (C) 2022 ElitechLogCLI
   reset      Delete all readings on the connected device
 ```
 
+## Charts
+```text
+> .\ElitechLogCLI.exe chart
+
+Serial number EFE199G58375, period from 2019-12-24 to 2021-04-20
+ 25.7 ┤      ╭╮                                                                        ╭╮
+ 25.0 ┤      ││╭╮                                                                      ││
+ 24.3 ┤╭╮ ╭╮ ││││                                                         ╭╮      ╭╮   ││
+ 23.7 ┤││ ││ │││╰╮                                                   ╭╮   ││   ╭╮ ││   ││
+ 23.0 ┼╯│╭╯╰─╯││ │    ╭╮                                            ╭╯╰─╮ ││   ││ │╰───╯│
+ 22.3 ┤ ╰╯    ╰╯ │    ││                                            │   │ ││  ╭╯╰╮│     │    ╭╮
+ 21.6 ┤          │╭─╮╭╯│╭╮                                          │   ╰╮│╰╮╭╯  ││     │  ╭─╯│╭╮
+ 20.9 ┤          ╰╯ ││ │││                                        ╭╮│    ││ ││   ╰╯     ╰╮ │  ││╰╮
+ 20.3 ┤             ╰╯ ││╰╮                                       │││    ╰╯ ╰╯           ╰─╯  ╰╯ │
+ 19.6 ┤                ╰╯ │                               ╭╮╭╮    │╰╯                            │
+ 18.9 ┤                   │╭──╮                           ││││╭─╮╭╯                              │
+ 18.2 ┤                   ╰╯  │                           │││││ ╰╯                               │╭
+ 17.6 ┤                       │                        ╭──╯││╰╯                                  ╰╯
+ 16.9 ┤                       ╰╮╭╮                     │   ││
+ 16.2 ┤                        │││                    ╭╯   ││
+ 15.5 ┤                        ╰╯│╭╮╭╮             ╭╮ │    ││
+ 14.9 ┤                          ╰╯│││ ╭──╮        ││ │    ╰╯
+ 14.2 ┤                            ╰╯╰╮│  │     ╭╮╭╯│ │
+ 13.5 ┤                               ╰╯  ╰──╮╭─╯││ ╰─╯
+ 12.8 ┤                                      ╰╯  ╰╯
+```
+
 ## Installing from source
-1. Install the latest ElitechLogWin application and make note of the install directory.
+1. Install the latest ElitechLogWin application and take note of the install directory.
 2. Open ElitechLogCLI.csproj in a text editor and replace all instances of "C:\tools\ElitechLogWin" with your install directory.
 3. Compile the project.
 4. Copy all binaries into the ElitechLogWin install directory.
