@@ -2,6 +2,7 @@ using System.Globalization;
 using ElitechLog.Consts;
 using ElitechLog.Models;
 using Humanizer;
+using Humanizer.Localisation;
 using Kurukuru;
 
 namespace ElitechLogCLI;
@@ -25,7 +26,7 @@ public static class Interaction
 
         if (!string.IsNullOrEmpty(parms.DeviceStateDesc))
         {
-            Console.Write($", state: {parms.DeviceStateDesc.TrimEnd('.')}");
+            Console.Write($", state: {parms.DeviceStateDesc.TrimEnd('.', ' ')}");
         }
 
         if (!string.IsNullOrEmpty(parms.BatteryDesc))
@@ -38,7 +39,7 @@ public static class Interaction
             Console.Write($", storage: {(double)parms.RecordsNumberActual / parms.DevicerCapacityMax:P1}");
             if (DateTime.TryParseExact(parms.expectStopTime, Default.DateTimeFormat, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var stopTime))
             {
-                Console.Write($" ({(stopTime - DateTime.Now).Humanize()})");
+                Console.Write($" ({(stopTime - DateTime.Now).Humanize(maxUnit: TimeUnit.Year)})");
             }
         }
 
