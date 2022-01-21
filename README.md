@@ -75,3 +75,4 @@ Serial number EFE199G58375, period from 2019-12-24 to 2021-04-20
 ## Future work
 * Improved charts that properly display gaps in the readings and possibly multiple devices at once. 
 * Better support for newer devices that use protocol V48 and the native USB interface.
+* Localize in other languages.
