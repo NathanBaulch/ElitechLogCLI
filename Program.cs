@@ -5,6 +5,7 @@ using CommandLine;
 using CommandLine.Text;
 using Dapper;
 using ElitechLog;
+using ElitechLog.Consts;
 using ElitechLogCLI.Verbs;
 using NGettext;
 
@@ -17,13 +18,16 @@ public static class Program
         Console.OutputEncoding = Encoding.UTF8;
         DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-        const string langFile = @"locales\en.mo";
+        // TODO: support other locales
+        var langFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"locales\en.mo");
         if (File.Exists(langFile))
         {
             typeof(Db).Assembly.GetType("ElitechLog.T", false, false)
                 ?.GetField("_Catalog", BindingFlags.NonPublic | BindingFlags.Static)
                 ?.SetValue(null, new Catalog(File.OpenRead(langFile)));
         }
+
+        Public.SysConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Resource\SysConfig.xml");
     }
 
     public static int Main(string[] args)

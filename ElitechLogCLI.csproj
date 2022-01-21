@@ -54,6 +54,10 @@
       <Link>locales\en.mo</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="C:\tools\ElitechLogWin\Resource\SysConfig.xml">
+      <Link>Resource\SysConfig.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="C:\tools\ElitechLogWin\x86\SQLite.Interop.dll">
       <Link>x86\SQLite.Interop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
