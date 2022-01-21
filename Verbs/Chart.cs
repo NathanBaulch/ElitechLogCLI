@@ -123,6 +123,7 @@ public static class Chart
         if (values.Count == 0)
         {
             Console.WriteLine("No readings found");
+            return -1;
         }
 
         var (from, to) = con.QuerySingle<(long, long)>("select min(timestamp), max(timestamp) " + sql, parms);
