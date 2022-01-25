@@ -3,7 +3,7 @@
 
 namespace System.Linq;
 
-public static class Enumerable
+public static class EnumerablePolyfill
 {
     /// <summary>
     /// Split the elements of a sequence into chunks of size at most <paramref name="size"/>.

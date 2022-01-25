@@ -111,31 +111,29 @@ public static class Chart
             }
         }
 
-        // TODO: handle gaps in the data
-
         var sql = "from reading where serial_number = @SerialNumber";
         if (periodFilter != null)
         {
             sql += " and " + periodFilter;
         }
 
-        var values = con.Query<double>($"select value{opts.ValueIndex} {sql} order by timestamp", parms).ToList();
-        if (values.Count == 0)
+        var readings = con.Query<(long ts, double val)>($"select timestamp, value{opts.ValueIndex} {sql} order by timestamp", parms).ToList();
+        if (readings.Count == 0)
         {
             Console.WriteLine("No readings found");
             return -1;
         }
 
-        var (from, to) = con.QuerySingle<(long, long)>("select min(timestamp), max(timestamp) " + sql, parms);
-        var fromDate = Utils.FromTimestamp(from);
-        var toDate = Utils.FromTimestamp(to);
+        var tsMin = readings[0].ts;
+        var tsMax = readings[readings.Count - 1].ts;
+        var fromDate = Utils.FromTimestamp(tsMin);
+        var toDate = Utils.FromTimestamp(tsMax);
         Console.WriteLine($"Serial number {opts.SerialNumber}, period from " + (fromDate.Date == toDate.Date ? $"{fromDate:g} to {toDate:g}" : $"{fromDate:d} to {toDate:d}"));
 
-        var max = values.Max();
-        var min = values.Min();
-        var range = max - min;
+        var (valMin, valMax) = readings.Aggregate((valMin: 0.0, valMax: 0.0), (a, r) => (Math.Min(a.valMin, r.val), Math.Max(a.valMin, r.val)));
+        var range = valMax - valMin;
         var lblFormat = "0.0";
-        var lblWidth = 6 + (int)Math.Floor(Math.Log10(Math.Max(1, Math.Max(Math.Abs(min), Math.Abs(max))))) + (min < 0 ? 1 : 0);
+        var lblWidth = 7 + (int)Math.Floor(Math.Log10(Math.Max(1, Math.Max(Math.Abs(valMin), Math.Abs(valMax))))) + (valMin < 0 ? 1 : 0);
         var height = opts.Height - 1;
         if (range < height)
         {
@@ -147,15 +145,12 @@ public static class Chart
             }
         }
 
-        var dataWidth = opts.Width - lblWidth;
-        if (values.Count > dataWidth)
-        {
-            values = values.Chunk((int)Math.Ceiling(values.Count / (decimal)dataWidth))
-                .Select(chunk => chunk.Average())
-                .ToList();
-        }
-
+        var dataWidth = Math.Min(opts.Width - lblWidth, readings.Count);
+        var factor = dataWidth / (double)(tsMax - tsMin);
+        var lookup = readings.ToLookup(r => (int)((r.ts - tsMin) * factor), r => r.val);
+        var values = Enumerable.Range(0, dataWidth).Select(i => lookup[i].Any() ? lookup[i].Average() : double.NaN).ToList();
         Console.WriteLine(AsciiChart.Sharp.AsciiChart.Plot(values, new AsciiChart.Sharp.Options { Height = height, AxisLabelFormat = lblFormat }));
+
         return 0;
     }
 }
