@@ -73,6 +73,10 @@ Serial number EFE199G58375, period from 2019-12-24 to 2021-04-20
 * [Chronic](https://github.com/mojombo/chronic)
 
 ## Future work
-* Improved charts able to display multiple devices at once. 
 * Better support for newer devices that use protocol V48 and the native USB interface.
 * Localize in other languages.
+* Celsius vs Fahrenheit units.
+* Charts:
+  * Legend that shows mapping from color to device.
+  * Display name to more easily identify devices.
+  * Control device line z-order.

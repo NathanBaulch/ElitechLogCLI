@@ -9,7 +9,7 @@ public static class Chart
     [Verb("chart", HelpText = "Display device readings in a simple chart")]
     public class Options
     {
-        private string _serialNumber;
+        private IEnumerable<string> _serialNumbers;
         private int _width = Console.WindowWidth;
         private int _height = 20;
         private int _valueIndex = 1;
@@ -17,14 +17,14 @@ public static class Chart
         [Option('d', "db_file", HelpText = "Database file")]
         public string DatabaseFile { get; set; } = Database.DefaultFile;
 
-        [Option('s', "serial_number", HelpText = "Restrict to a specific device, required if multiple devices present")]
-        public string SerialNumber
+        [Option('s', "serial_number", HelpText = "Restrict to a specific devices")]
+        public IEnumerable<string> SerialNumbers
         {
-            get => _serialNumber;
+            get => _serialNumbers;
             set
             {
-                if (value != null && !value.All(char.IsLetterOrDigit)) throw new ArgumentException("Must be alphanumeric");
-                _serialNumber = value;
+                if (value.Any(v => !v.All(char.IsLetterOrDigit))) throw new ArgumentException("Must be alphanumeric");
+                _serialNumbers = value;
             }
         }
 
@@ -70,67 +70,60 @@ public static class Chart
         if (!File.Exists(opts.DatabaseFile)) throw new ApplicationException("Database file not found");
 
         Chronic.Span period = null;
-        string periodFilter = null;
+        var filters = new List<string>(3);
         if (opts.Period != null)
         {
             period = new Chronic.Parser().Parse(opts.Period);
             if (period == null) throw new ApplicationException("Could not parse period");
 
-            periodFilter = (period.Start != null ? "timestamp >= @Start" : null) +
-                           (period.Start != null && period.End != null ? " and " : null) +
-                           (period.End != null ? "timestamp < @End" : null);
-        }
+            if (period.Start != null)
+            {
+                filters.Add("timestamp >= @Start");
+            }
 
+            if (period.End != null)
+            {
+                filters.Add("timestamp < @End");
+            }
+        }
 
         using var con = new SQLiteConnection($"Data Source={opts.DatabaseFile}");
         con.Open();
 
         var parms = new
         {
-            opts.SerialNumber,
+            opts.SerialNumbers,
             Start = Utils.ToTimestamp(period?.Start),
             End = Utils.ToTimestamp(period?.End)
         };
 
-        if (string.IsNullOrEmpty(opts.SerialNumber))
+        if (opts.SerialNumbers?.Any() ?? false)
         {
-            var where = periodFilter != null ? "where " + periodFilter : null;
-            var nums = con.Query<string>($"select distinct serial_number from reading {where} order by serial_number", parms).ToList();
-            switch (nums.Count)
-            {
-                case 0:
-                    Console.WriteLine("No readings found");
-                    return -1;
-                case > 1:
-                    Console.WriteLine("Please specify a serial number: " + string.Join(", ", nums));
-                    return -1;
-                default:
-                    opts.SerialNumber = nums[0];
-                    parms = new { opts.SerialNumber, parms.Start, parms.End };
-                    break;
-            }
+            filters.Add("serial_number in @SerialNumbers");
         }
 
-        var sql = "from reading where serial_number = @SerialNumber";
-        if (periodFilter != null)
+        var sql = "from reading";
+        if (filters.Count > 0)
         {
-            sql += " and " + periodFilter;
+            sql += " where " + string.Join(" and ", filters);
         }
 
-        var readings = con.Query<(long ts, double val)>($"select timestamp, value{opts.ValueIndex} {sql} order by timestamp", parms).ToList();
+        var readings = con.Query<(string sn, long ts, double val)>($"select serial_number, timestamp, value{opts.ValueIndex} {sql} order by serial_number, timestamp", parms).ToList();
         if (readings.Count == 0)
         {
             Console.WriteLine("No readings found");
             return -1;
         }
 
-        var tsMin = readings[0].ts;
-        var tsMax = readings[readings.Count - 1].ts;
+        var devices = readings.GroupBy(reading => reading.sn).ToList();
+        var (tsMin, tsMax, countMax) = devices.Aggregate(
+            (tsMin: long.MaxValue, tsMax: long.MinValue, countMax: int.MinValue),
+            (a, d) => (Math.Min(a.tsMin, d.First().ts), Math.Max(a.tsMax, d.Last().ts), Math.Max(a.countMax, d.Count())));
         var fromDate = Utils.FromTimestamp(tsMin);
         var toDate = Utils.FromTimestamp(tsMax);
-        Console.WriteLine($"Serial number {opts.SerialNumber}, period from " + (fromDate.Date == toDate.Date ? $"{fromDate:g} to {toDate:g}" : $"{fromDate:d} to {toDate:d}"));
+        Console.WriteLine("Period from " + (fromDate.Date == toDate.Date ? $"{fromDate:g} to {toDate:g}" : $"{fromDate:d} to {toDate:d}"));
 
-        var (valMin, valMax) = readings.Aggregate((valMin: 0.0, valMax: 0.0), (a, r) => (Math.Min(a.valMin, r.val), Math.Max(a.valMin, r.val)));
+        var (valMin, valMax) = readings.Aggregate((valMin: double.MaxValue, valMax: double.MinValue), (a, r) => (Math.Min(a.valMin, r.val), Math.Max(a.valMin, r.val)));
         var range = valMax - valMin;
         var lblFormat = "0.0";
         var lblWidth = 7 + (int)Math.Floor(Math.Log10(Math.Max(1, Math.Max(Math.Abs(valMin), Math.Abs(valMax))))) + (valMin < 0 ? 1 : 0);
@@ -146,10 +139,58 @@ public static class Chart
         }
 
         var dataWidth = Math.Min(opts.Width - lblWidth, readings.Count);
+
+        if (countMax < dataWidth)
+        {
+            // choose appropriate width by brute force counting number of reading blocks
+            var minBlocks = 0;
+            for (var width = countMax; width <= dataWidth; width++)
+            {
+                var blocks = devices.Sum(device =>
+                {
+                    var factor = width / (double)(tsMax - tsMin);
+                    var lookup = device.ToLookup(r => (int)((r.ts - tsMin) * factor));
+                    var flag = false;
+                    var count = 0;
+                    for (var i = 0; i < width; i++)
+                    {
+                        if (!lookup[i].Any())
+                        {
+                            flag = false;
+                        }
+                        else if (!flag)
+                        {
+                            flag = true;
+                            count++;
+                        }
+                    }
+
+                    return count;
+                });
+                if (minBlocks == 0)
+                {
+                    minBlocks = blocks;
+                }
+                else if (blocks > minBlocks)
+                {
+                    dataWidth = width - 1;
+                    break;
+                }
+            }
+        }
+
         var factor = dataWidth / (double)(tsMax - tsMin);
-        var lookup = readings.ToLookup(r => (int)((r.ts - tsMin) * factor), r => r.val);
-        var values = Enumerable.Range(0, dataWidth).Select(i => lookup[i].Any() ? lookup[i].Average() : double.NaN).ToList();
-        Console.WriteLine(AsciiChart.Sharp.AsciiChart.Plot(values, new AsciiChart.Sharp.Options { Height = height, AxisLabelFormat = lblFormat }));
+        var values = devices.Select(device =>
+        {
+            var lookup = device.ToLookup(r => (int)((r.ts - tsMin) * factor), r => r.val);
+            return Enumerable.Range(0, dataWidth).Select(i => lookup[i].Any() ? lookup[i].Average() : double.NaN).ToList();
+        });
+        Console.WriteLine(AsciiChart.Sharp.AsciiChart.Plot(values, new AsciiChart.Sharp.Options
+        {
+            Height = height,
+            AxisLabelFormat = lblFormat,
+            SeriesColors = Enumerable.Range(1, devices.Count).Select(i => (AsciiChart.Sharp.AnsiColor)i).ToArray()
+        }));
 
         return 0;
     }
