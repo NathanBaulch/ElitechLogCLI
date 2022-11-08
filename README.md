@@ -29,7 +29,7 @@ Copyright (C) 2022 ElitechLogCLI
 ```text
 > .\ElitechLogCLI.exe chart
 
-Serial number EFE199G58375, period from 2019-12-24 to 2021-04-20
+Device(s) EFE199G58375 over period 2019-12-24 to 2021-04-20
  25.7 ┤      ╭╮                                                                        ╭╮
  25.0 ┤      ││╭╮                                                                      ││
  24.3 ┤╭╮ ╭╮ ││││                                                         ╭╮      ╭╮   ││

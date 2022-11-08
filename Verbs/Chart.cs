@@ -121,7 +121,8 @@ public static class Chart
             (a, d) => (Math.Min(a.tsMin, d.First().ts), Math.Max(a.tsMax, d.Last().ts), Math.Max(a.countMax, d.Count())));
         var fromDate = Utils.FromTimestamp(tsMin);
         var toDate = Utils.FromTimestamp(tsMax);
-        Console.WriteLine("Period from " + (fromDate.Date == toDate.Date ? $"{fromDate:g} to {toDate:g}" : $"{fromDate:d} to {toDate:d}"));
+        Console.WriteLine("Device(s) " + string.Join(", ", devices.Select((device, i) => $"{ColorString((AsciiChart.Sharp.AnsiColor)(i + 1))}{device.Key}{ColorString(AsciiChart.Sharp.AnsiColor.Default)}")) +
+                          " over period " + (fromDate.Date == toDate.Date ? $"{fromDate:g} to {toDate:g}" : $"{fromDate:d} to {toDate:d}"));
 
         var (valMin, valMax) = readings.Aggregate((valMin: double.MaxValue, valMax: double.MinValue), (a, r) => (Math.Min(a.valMin, r.val), Math.Max(a.valMin, r.val)));
         var range = valMax - valMin;
@@ -193,5 +194,30 @@ public static class Chart
         }));
 
         return 0;
+    }
+
+    private static string ColorString(AsciiChart.Sharp.AnsiColor color)
+    {
+        if (color == AsciiChart.Sharp.AnsiColor.Default)
+        {
+            return "\x1b[0m";
+        }
+
+        if (color == AsciiChart.Sharp.AnsiColor.Black)
+        {
+            color = AsciiChart.Sharp.AnsiColor.Default;
+        }
+
+        if (color <= AsciiChart.Sharp.AnsiColor.Silver)
+        {
+            return $"\x1b[{30 + (byte)color}m";
+        }
+
+        if (color <= AsciiChart.Sharp.AnsiColor.White)
+        {
+            return ($"\x1b[{82 + (byte)color}m");
+        }
+
+        return ($"\x1b[38;5;{(byte)color}m");
     }
 }
